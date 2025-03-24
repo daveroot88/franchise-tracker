@@ -2,7 +2,7 @@
   "name": "franchise-tracker",
   "version": "1.0.0",
   "main": "index.js",
-  "homepage": "https://trentonenglish.github.io/franchise-tracker",
+  "homepage": "https://daveroot88.github.io/franchise-tracker",
   "scripts": {
     "start": "webpack serve --mode development --open",
     "build": "webpack --mode production",

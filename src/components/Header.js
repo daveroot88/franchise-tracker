@@ -1,11 +1,12 @@
 import React from 'react';
 import '../styles/Header.css';
+import logo from '../Horizontal Black Logo.png';
 
 function Header({ activeView, onNavigate }) {
   return (
     <header>
       <div className="logo-container">
-        <img src="/Horizontal Black Logo.png" alt="Crave Cookies Logo" className="logo" />
+        <img src={logo} alt="Crave Cookies Logo" className="logo" />
       </div>
       <nav>
         <ul>
