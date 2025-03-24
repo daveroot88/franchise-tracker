@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crave Cookies Franchise Tracker</title>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="Horizontal Black Logo.png" alt="Crave Cookies Logo" class="logo">
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active" data-view="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="#" data-view="leads"><i class="fas fa-user-plus"></i> Leads</a></li>
+                <li><a href="#" data-view="sales"><i class="fas fa-funnel-dollar"></i> Sales Pipeline</a></li>
+                <li><a href="#" data-view="development"><i class="fas fa-store"></i> Development</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Dashboard View -->
+        <section id="dashboard" class="view active">
+            <div class="dashboard-header">
+                <h2><span class="highlight">Franchise Sales</span> Dashboard</h2>
+                <div class="date-filter">
+                    <label for="date-range">Time Period:</label>
+                    <select id="date-range" class="sleek-select">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="365">Last Year</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
+                    <h3>New Leads</h3>
+                    <p class="stat-number">42</p>
+                    <p class="stat-change positive"><i class="fas fa-arrow-up"></i> 12%</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-phone-alt"></i></div>
+                    <h3>Sales Calls</h3>
+                    <p class="stat-number">38</p>
+                    <p class="stat-change positive"><i class="fas fa-arrow-up"></i> 5%</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-clipboard-check"></i></div>
+                    <h3>Follow-ups</h3>
+                    <p class="stat-number">27</p>
+                    <p class="stat-change negative"><i class="fas fa-arrow-down"></i> 3%</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-cookie"></i></div>
+                    <h3>Franchise Sales</h3>
+                    <p class="stat-number">8</p>
+                    <p class="stat-change positive"><i class="fas fa-arrow-up"></i> 33%</p>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Sales Pipeline</h3>
+                    <canvas id="pipeline-chart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Development Progress</h3>
+                    <canvas id="development-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="recent-activity">
+                <h3>Recent Activity</h3>
+                <ul class="activity-list">
+                    <li>
+                        <span class="activity-time">2 hours ago</span>
+                        <span class="activity-type lead">New Lead</span>
+                        <span class="activity-desc">John Smith from Denver, CO</span>
+                    </li>
+                    <li>
+                        <span class="activity-time">5 hours ago</span>
+                        <span class="activity-type call">Sales Call</span>
+                        <span class="activity-desc">Sarah Johnson - Follow-up scheduled</span>
+                    </li>
+                    <li>
+                        <span class="activity-time">Yesterday</span>
+                        <span class="activity-type sale">Franchise Sale</span>
+                        <span class="activity-desc">Michael Brown - Phoenix, AZ location</span>
+                    </li>
+                    <li>
+                        <span class="activity-time">2 days ago</span>
+                        <span class="activity-type development">Development Update</span>
+                        <span class="activity-desc">Las Vegas location - Equipment purchased</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Leads View -->
+        <section id="leads" class="view">
+            <div class="section-header">
+                <h2><span class="highlight">Lead</span> Management</h2>
+                <button id="add-lead-btn" class="primary-btn"><i class="fas fa-plus"></i> Add New Lead</button>
+            </div>
+
+            <div class="filter-bar">
+                <div class="search-container">
+                    <input type="text" id="lead-search" placeholder="Search leads...">
+                </div>
+                <div class="filter-container">
+                    <label for="lead-status-filter">Status:</label>
+                    <select id="lead-status-filter">
+                        <option value="all">All Statuses</option>
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="qualified">Qualified</option>
+                        <option value="unqualified">Unqualified</option>
+                    </select>
+                </div>
+                <div class="filter-container">
+                    <label for="lead-source-filter">Source:</label>
+                    <select id="lead-source-filter">
+                        <option value="all">All Sources</option>
+                        <option value="website">Website</option>
+                        <option value="referral">Referral</option>
+                        <option value="social">Social Media</option>
+                        <option value="event">Event</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="leads-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>Contact</th>
+                            <th>Source</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Sales Pipeline View -->
+        <section id="sales" class="view">
+            <div class="section-header">
+                <h2><span class="highlight">Sales</span> Pipeline</h2>
+            </div>
+
+            <div class="pipeline-container">
+                <div class="pipeline-stage">
+                    <h3>Initial Contact</h3>
+                    <div class="pipeline-cards" id="initial-contact">
+                        <!-- Cards will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="pipeline-stage">
+                    <h3>Sales Call</h3>
+                    <div class="pipeline-cards" id="sales-call">
+                        <!-- Cards will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="pipeline-stage">
+                    <h3>Follow-up</h3>
+                    <div class="pipeline-cards" id="follow-up">
+                        <!-- Cards will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="pipeline-stage">
+                    <h3>Negotiation</h3>
+                    <div class="pipeline-cards" id="negotiation">
+                        <!-- Cards will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="pipeline-stage">
+                    <h3>Closed Won</h3>
+                    <div class="pipeline-cards" id="closed-won">
+                        <!-- Cards will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Development Tracker View -->
+        <section id="development" class="view">
+            <div class="section-header">
+                <h2><span class="highlight">Development</span> Tracker</h2>
+            </div>
+
+            <div class="filter-bar">
+                <div class="search-container">
+                    <input type="text" id="development-search" placeholder="Search franchises...">
+                </div>
+                <div class="filter-container">
+                    <label for="development-stage-filter">Stage:</label>
+                    <select id="development-stage-filter">
+                        <option value="all">All Stages</option>
+                        <option value="agreement">Agreement Signed</option>
+                        <option value="payment">Wire Transfer</option>
+                        <option value="onboarding">Onboarding</option>
+                        <option value="training">Training</option>
+                        <option value="construction">Construction</option>
+                        <option value="equipment">Equipment</option>
+                        <option value="opening">Store Opening</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="development-grid">
+                <!-- Development cards will be populated by JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for adding/editing leads -->
+    <div id="lead-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add New Lead</h2>
+            <form id="lead-form">
+                <div class="form-group">
+                    <label for="lead-name">Name:</label>
+                    <input type="text" id="lead-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="lead-email">Email:</label>
+                    <input type="email" id="lead-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="lead-phone">Phone:</label>
+                    <input type="tel" id="lead-phone">
+                </div>
+                <div class="form-group">
+                    <label for="lead-location">Location:</label>
+                    <input type="text" id="lead-location" required>
+                </div>
+                <div class="form-group">
+                    <label for="lead-source">Source:</label>
+                    <select id="lead-source" required>
+                        <option value="website">Website</option>
+                        <option value="referral">Referral</option>
+                        <option value="social">Social Media</option>
+                        <option value="event">Event</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="lead-notes">Notes:</label>
+                    <textarea id="lead-notes"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="secondary-btn" id="cancel-lead">Cancel</button>
+                    <button type="submit" class="primary-btn">Save Lead</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
