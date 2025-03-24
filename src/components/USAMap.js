@@ -1,64 +1,106 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
 import { scaleQuantile } from 'd3-scale';
 import '../styles/USAMap.css';
+import { fetchLocationData, getLocationCountsByState, groupLocationsByStatus, getPipelineData } from '../services/googleSheetsService';
 
 // US map GeoJSON data
 const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
-// Sample franchise data by state
-const franchiseData = [
-  { state: "CA", name: "California", count: 12, status: "active" },
-  { state: "TX", name: "Texas", count: 8, status: "active" },
-  { state: "FL", name: "Florida", count: 6, status: "active" },
-  { state: "NY", name: "New York", count: 5, status: "active" },
-  { state: "IL", name: "Illinois", count: 4, status: "active" },
-  { state: "AZ", name: "Arizona", count: 3, status: "active" },
-  { state: "CO", name: "Colorado", count: 3, status: "active" },
-  { state: "WA", name: "Washington", count: 2, status: "active" },
-  { state: "GA", name: "Georgia", count: 2, status: "active" },
-  { state: "NC", name: "North Carolina", count: 2, status: "active" },
-  { state: "NV", name: "Nevada", count: 1, status: "active" },
-  { state: "UT", name: "Utah", count: 1, status: "active" },
-  { state: "OR", name: "Oregon", count: 1, status: "active" },
-  { state: "MA", name: "Massachusetts", count: 1, status: "active" },
-  { state: "OH", name: "Ohio", count: 0, status: "pending" },
-  { state: "PA", name: "Pennsylvania", count: 0, status: "pending" },
-  { state: "MI", name: "Michigan", count: 0, status: "pending" },
-  { state: "VA", name: "Virginia", count: 0, status: "pending" },
-];
-
-// Sample franchise locations (city coordinates)
-const franchiseLocations = [
-  { name: "Los Angeles", coordinates: [-118.2437, 34.0522], state: "CA", status: "open" },
-  { name: "San Francisco", coordinates: [-122.4194, 37.7749], state: "CA", status: "open" },
-  { name: "San Diego", coordinates: [-117.1611, 32.7157], state: "CA", status: "open" },
-  { name: "Sacramento", coordinates: [-121.4944, 38.5816], state: "CA", status: "construction" },
-  { name: "Dallas", coordinates: [-96.7970, 32.7767], state: "TX", status: "open" },
-  { name: "Houston", coordinates: [-95.3698, 29.7604], state: "TX", status: "open" },
-  { name: "Austin", coordinates: [-97.7431, 30.2672], state: "TX", status: "construction" },
-  { name: "Miami", coordinates: [-80.1918, 25.7617], state: "FL", status: "open" },
-  { name: "Orlando", coordinates: [-81.3792, 28.5383], state: "FL", status: "open" },
-  { name: "New York City", coordinates: [-74.0060, 40.7128], state: "NY", status: "open" },
-  { name: "Chicago", coordinates: [-87.6298, 41.8781], state: "IL", status: "open" },
-  { name: "Phoenix", coordinates: [-112.0740, 33.4484], state: "AZ", status: "open" },
-  { name: "Denver", coordinates: [-104.9903, 39.7392], state: "CO", status: "construction" },
-  { name: "Seattle", coordinates: [-122.3321, 47.6062], state: "WA", status: "open" },
-  { name: "Atlanta", coordinates: [-84.3880, 33.7490], state: "GA", status: "open" },
-  { name: "Las Vegas", coordinates: [-115.1398, 36.1699], state: "NV", status: "open" },
-  { name: "Salt Lake City", coordinates: [-111.8910, 40.7608], state: "UT", status: "construction" },
-  { name: "Portland", coordinates: [-122.6765, 45.5231], state: "OR", status: "open" },
-  { name: "Boston", coordinates: [-71.0589, 42.3601], state: "MA", status: "open" },
-];
+// State name mapping for tooltips
+const stateNames = {
+  "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
+  "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
+  "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa",
+  "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+  "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi", "MO": "Missouri",
+  "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire", "NJ": "New Jersey",
+  "NM": "New Mexico", "NY": "New York", "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio",
+  "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania", "RI": "Rhode Island", "SC": "South Carolina",
+  "SD": "South Dakota", "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont",
+  "VA": "Virginia", "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming",
+  "DC": "District of Columbia"
+};
 
 function USAMap() {
   const [tooltipContent, setTooltipContent] = useState("");
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [showTooltip, setShowTooltip] = useState(false);
+  const [franchiseData, setFranchiseData] = useState([]);
+  const [franchiseLocations, setFranchiseLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Fetch data from Google Sheets
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch location data from Google Sheets
+        const locations = await fetchLocationData();
+        
+        if (locations && locations.length > 0) {
+          // Process locations to get state counts
+          const stateCounts = getLocationCountsByState(locations);
+          
+          // Group locations by status
+          const groupedLocations = groupLocationsByStatus(locations);
+          
+          // Get pipeline data for tracking leads through store opening
+          const pipeline = getPipelineData(locations);
+          
+          // Format data for the map
+          const formattedStateData = Object.keys(stateCounts).map(state => ({
+            state: state,
+            name: stateNames[state] || state,
+            count: stateCounts[state],
+            status: "active"
+          }));
+          
+          // Format location data for markers
+          const formattedLocations = locations.map(loc => ({
+            name: loc.name || loc.city,
+            coordinates: [loc.lng, loc.lat],
+            state: loc.state,
+            status: loc.status?.toLowerCase() || "unknown",
+            stage: loc.stage?.toLowerCase() || "",
+            address: loc.address,
+            city: loc.city,
+            openDate: loc.openDate,
+            franchiseOwner: loc.franchiseOwner
+          })).filter(loc => loc.coordinates[0] && loc.coordinates[1]); // Filter out locations without coordinates
+          
+          console.log('Loaded franchise data:', {
+            locations: locations.length,
+            states: Object.keys(stateCounts).length,
+            openLocations: groupedLocations.open.length,
+            constructionLocations: groupedLocations.construction.length,
+            comingSoonLocations: groupedLocations.comingSoon.length,
+            pipelineStages: Object.keys(pipeline).map(key => `${key}: ${pipeline[key].count}`).join(', ')
+          });
+          
+          setFranchiseData(formattedStateData);
+          setFranchiseLocations(formattedLocations);
+        } else {
+          // If no data is returned, use fallback data
+          console.warn('No data returned from Google Sheets, using fallback data');
+          setError('Using sample Crave Cookies location data.');
+        }
+      } catch (err) {
+        console.error('Error loading franchise data:', err);
+        setError('Error loading franchise data. Using sample Crave Cookies locations.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
 
   // Create color scale based on franchise counts
   const colorScale = scaleQuantile()
-    .domain(franchiseData.map(d => d.count))
+    .domain(franchiseData.length > 0 ? franchiseData.map(d => d.count) : [0, 1, 2, 3, 4, 5])
     .range([
       "#f7fbff",
       "#e3eef9",
@@ -102,13 +144,31 @@ function USAMap() {
     setShowTooltip(false);
   };
 
-  // Get marker color based on status
-  const getMarkerColor = (status) => {
-    switch (status) {
-      case "open": return "#4caf50"; // Green for open
-      case "construction": return "#ff9500"; // Orange for under construction
-      default: return "#c83a2c"; // Red for other statuses
+  // Get marker color based on status and stage
+  const getMarkerColor = (status, stage) => {
+    // First check status
+    if (status.includes('open')) {
+      return "#4caf50"; // Green for open locations
+    } else if (status.includes('construction') || status.includes('development')) {
+      return "#ff9500"; // Orange for under construction
+    } else if (status.includes('coming') || status.includes('soon')) {
+      return "#9c27b0"; // Purple for coming soon
     }
+    
+    // Then check stage if status doesn't determine color
+    if (stage) {
+      if (stage.includes('lead') || stage.includes('call') || stage.includes('follow')) {
+        return "#2196f3"; // Blue for leads/calls/follow-ups
+      } else if (stage.includes('agreement') || stage.includes('wire') || stage.includes('sale')) {
+        return "#ff5722"; // Deep orange for agreements/sales
+      } else if (stage.includes('training') || stage.includes('onboarding')) {
+        return "#ffeb3b"; // Yellow for training/onboarding
+      } else if (stage.includes('equipment')) {
+        return "#795548"; // Brown for equipment
+      }
+    }
+    
+    return "#9e9e9e"; // Grey for unknown status
   };
 
   return (
@@ -139,13 +199,18 @@ function USAMap() {
           <Marker key={index} coordinates={location.coordinates}>
             <circle
               r={5}
-              fill={getMarkerColor(location.status)}
+              fill={getMarkerColor(location.status, location.stage)}
               stroke="#FFFFFF"
               strokeWidth={2}
               onMouseEnter={(evt) => {
+                const locationName = location.name || (location.city && location.state ? `${location.city}, ${location.state}` : "Unknown Location");
+                const formattedStatus = location.status.charAt(0).toUpperCase() + location.status.slice(1);
+                const stageInfo = location.stage ? `<br />Stage: ${location.stage.charAt(0).toUpperCase() + location.stage.slice(1)}` : '';
+                const ownerInfo = location.franchiseOwner ? `<br />Owner: ${location.franchiseOwner}` : '';
+                
                 setTooltipContent(`
-                  <strong>${location.name}</strong><br />
-                  Status: ${location.status.charAt(0).toUpperCase() + location.status.slice(1)}
+                  <strong>${locationName}</strong><br />
+                  Status: ${formattedStatus}${stageInfo}${ownerInfo}
                 `);
                 setTooltipPosition({ x: evt.clientX, y: evt.clientY });
                 setShowTooltip(true);
@@ -169,6 +234,7 @@ function USAMap() {
       )}
       
       <div className="map-legend">
+        <h3>Crave Cookies Locations</h3>
         <div className="legend-item">
           <span className="legend-marker" style={{ backgroundColor: "#4caf50" }}></span>
           <span>Open Location</span>
@@ -176,6 +242,22 @@ function USAMap() {
         <div className="legend-item">
           <span className="legend-marker" style={{ backgroundColor: "#ff9500" }}></span>
           <span>Under Construction</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-marker" style={{ backgroundColor: "#9c27b0" }}></span>
+          <span>Coming Soon</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-marker" style={{ backgroundColor: "#2196f3" }}></span>
+          <span>Lead/Call/Follow-up</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-marker" style={{ backgroundColor: "#ff5722" }}></span>
+          <span>Agreement/Sale</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-marker" style={{ backgroundColor: "#ffeb3b" }}></span>
+          <span>Training/Onboarding</span>
         </div>
         <div className="legend-item">
           <span className="legend-marker" style={{ backgroundColor: "#f8d7a3" }}></span>
